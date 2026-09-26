@@ -15,8 +15,13 @@ jobs:
           channel: stable
       - run: flutter create . --platforms=android --project-name ibrahim_ai --overwrite
       - run: flutter pub get
-      - run: flutter build apk --debug
+      - run: |
+          echo "storePassword=android" > android/key.properties
+          echo "keyPassword=android" >> android/key.properties
+          echo "keyAlias=androiddebugkey" >> android/key.properties
+          echo "storeFile=/home/runner/.android/debug.keystore" >> android/key.properties
+      - run: flutter build apk --release
       - uses: actions/upload-artifact@v4
         with:
-          name: Ibrahim-APK
-          path: build/app/outputs/flutter-apk/app-debug.apk
+          name: Ibrahim-APK-final
+          path: build/app/outputs/flutter-apk/app-release.apk
