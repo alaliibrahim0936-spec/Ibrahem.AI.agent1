@@ -14,6 +14,9 @@ jobs:
           flutter-version: '3.22.0'
           channel: stable
       - run: flutter create . --platforms=android --project-name ibrahim_ai --overwrite
+      - run: |
+          git checkout HEAD -- lib/ pubspec.yaml pubspec.lock 2>/dev/null || true
+          ls lib/
       - run: flutter pub get
       - run: |
           echo "storePassword=android" > android/key.properties
