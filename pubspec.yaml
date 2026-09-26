@@ -1,0 +1,16 @@
+name: ibrahim_ai
+description: Ibrahim AI Agent
+publish_to: 'none'
+version: 1.0.0+1
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+dependencies:
+  flutter:
+    sdk: flutter
+  google_generative_ai: ^0.4.4
+  image_picker: ^1.0.7
+  flutter_contacts: ^1.1.9
+  url_launcher: ^6.2.5
+  permission_handler: ^11.3.1
+flutter:
+  uses-material-design: true
