@@ -12,7 +12,13 @@ jobs:
       - uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.22.0'
-      - run: flutter create . --platforms=android --project-name ibrahim_ai
+          channel: 'stable'
+      - run: flutter create. --platforms=android --project-name ibrahim_ai
+      - run: |
+          echo "Fixing Gradle version..."
+          sed -i 's/gradle-8.*/gradle-8.5-all.zip/' android/gradle/wrapper/gradle-wrapper.properties
+          sed -i 's/gradle-9.*/gradle-8.5-all.zip/' android/gradle/wrapper/gradle-wrapper.properties
+          cat android/gradle/wrapper/gradle-wrapper.properties
       - run: flutter pub get
       - run: flutter build apk --debug
       - uses: actions/upload-artifact@v4
