@@ -13,17 +13,20 @@ jobs:
         with:
           flutter-version: '3.22.0'
           channel: 'stable'
-      - run: |
-          cd project
-          flutter create. --platforms=android --project-name ibrahim_ai
-          echo "Fixing Gradle..."
-          sed -i 's/gradle-.*-all.zip/gradle-8.5-all.zip/' android/gradle/wrapper/gradle-wrapper.properties
-          cat android/gradle/wrapper/gradle-wrapper.properties
-      - run: |
-          cd project
+      - name: Fix and Build
+        run: |
+          if [ -d "project" ]; then
+            cd project
+            echo "Found project folder"
+          else
+            echo "Building in root"
+          fi
+          ls -la
+          flutter create. --platforms=android --project-name ibrahim_ai || true
+          sed -i 's/gradle-.*-all.zip/gradle-8.5-all.zip/' android/gradle/wrapper/gradle-wrapper.properties || true
           flutter pub get
           flutter build apk --debug
       - uses: actions/upload-artifact@v4
         with:
           name: Ibrahim-APK
-          path: project/build/app/outputs/flutter-apk/app-debug.apk
+          path: "**/app-debug.apk"
