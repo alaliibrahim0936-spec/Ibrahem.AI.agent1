@@ -13,10 +13,11 @@ jobs:
         with:
           flutter-version: '3.22.0'
           channel: stable
-      - run: flutter create . --platforms=android --project-name ibrahim_ai --overwrite
       - run: |
-          git checkout HEAD -- lib/ pubspec.yaml pubspec.lock 2>/dev/null || true
-          ls lib/
+          mv lib lib_backup
+          flutter create . --platforms=android --project-name ibrahim_ai
+          rm -rf lib
+          mv lib_backup lib
       - run: flutter pub get
       - run: |
           echo "storePassword=android" > android/key.properties
@@ -26,5 +27,5 @@ jobs:
       - run: flutter build apk --release
       - uses: actions/upload-artifact@v4
         with:
-          name: Ibrahim-APK-final
+          name: Ibrahim-APK-real
           path: build/app/outputs/flutter-apk/app-release.apk
