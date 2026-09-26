@@ -13,15 +13,17 @@ jobs:
         with:
           flutter-version: '3.22.0'
           channel: 'stable'
-      - run: flutter create. --platforms=android --project-name ibrahim_ai
       - run: |
-          echo "Fixing Gradle version..."
-          sed -i 's/gradle-8.*/gradle-8.5-all.zip/' android/gradle/wrapper/gradle-wrapper.properties
-          sed -i 's/gradle-9.*/gradle-8.5-all.zip/' android/gradle/wrapper/gradle-wrapper.properties
+          cd project
+          flutter create. --platforms=android --project-name ibrahim_ai
+          echo "Fixing Gradle..."
+          sed -i 's/gradle-.*-all.zip/gradle-8.5-all.zip/' android/gradle/wrapper/gradle-wrapper.properties
           cat android/gradle/wrapper/gradle-wrapper.properties
-      - run: flutter pub get
-      - run: flutter build apk --debug
+      - run: |
+          cd project
+          flutter pub get
+          flutter build apk --debug
       - uses: actions/upload-artifact@v4
         with:
           name: Ibrahim-APK
-          path: build/app/outputs/flutter-apk/app-debug.apk
+          path: project/build/app/outputs/flutter-apk/app-debug.apk
