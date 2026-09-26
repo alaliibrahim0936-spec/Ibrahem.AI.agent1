@@ -1,111 +1,65 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:google_generative_ai/google_generative_ai.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:flutter_contacts/flutter_contacts.dart';
-import 'package:url_launcher/url_launcher.dart';
-import 'package:permission_handler/permission_handler.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 
-void main() => runApp(MaterialApp(home: IbrahimAgent(), debugShowCheckedModeBanner: false));
+void main() => runApp(const IbrahimAI());
 
-class IbrahimAgent extends StatefulWidget {
+class IbrahimAI extends StatelessWidget {
+  const IbrahimAI({super.key});
   @override
-  State<IbrahimAgent> createState() => _IbrahimAgentState();
+  Widget build(BuildContext context) {
+    return MaterialApp(debugShowCheckedModeBanner: false, home: ChatPage());
+  }
 }
 
-class _IbrahimAgentState extends State<IbrahimAgent> {
-  final String apiKey = "AQ.Ab8RN6KviYAqbJezszQYuUErIVTJ2NSPJheK183sSiBR6ZSowQ";
-  final TextEditingController _controller = TextEditingController();
-  List<Map<String,String>> messages = [];
-  bool loading = false;
+class ChatPage extends StatefulWidget {
+  @override
+  State<ChatPage> createState() => _ChatPageState();
+}
 
-  Future<void> askAI(String text, {File? image}) async {
+class _ChatPageState extends State<ChatPage> {
+  final _controller = TextEditingController();
+  final List<Map<String, String>> _messages = [];
+  bool _loading = false;
+
+  Future<void> sendMessage() async {
+    if (_controller.text.trim().isEmpty) return;
+    final userText = _controller.text.trim();
     setState(() {
-      loading = true;
-      messages.add({"role":"user","text":text});
+      _messages.add({"role": "user", "text": userText});
+      _loading = true;
+      _controller.clear();
     });
-
     try {
-      if(text.contains("اتصل") || text.contains("اتصال")){
-        await handleCall(text);
-        setState(() => loading = false);
-        return;
-      }
-
-      final model = GenerativeModel(model: 'gemini-1.5-flash', apiKey: apiKey);
-      Content content;
-      if(image!= null){
-        final bytes = await image.readAsBytes();
-        content = Content.multi([TextPart(text), DataPart('image/jpeg', bytes)]);
+      final url = Uri.parse('https://text.pollinations.ai/${Uri.encodeComponent(userText)}');
+      final response = await http.get(url);
+      if (response.statusCode == 200) {
+        setState(() => _messages.add({"role": "ai", "text": response.body}));
       } else {
-        content = Content.text(text);
+        setState(() => _messages.add({"role": "ai", "text": "خطأ: ${response.statusCode}"}));
       }
-
-      final response = await model.generateContent([content]);
-      setState(() {
-        messages.add({"role":"ai","text": response.text?? "لم افهم"});
-      });
-    } catch(e){
-      setState(() { messages.add({"role":"ai","text": "خطأ: $e"}); });
+    } catch (e) {
+      setState(() => _messages.add({"role": "ai", "text": "خطأ: $e"}));
+    } finally {
+      setState(() => _loading = false);
     }
-    setState(() => loading = false);
-  }
-
-  Future<void> handleCall(String text) async {
-    await Permission.contacts.request();
-    await Permission.phone.request();
-    String name = text.replaceAll("اتصل", "").replaceAll("ب", "").replaceAll("على", "").trim();
-
-    if(await FlutterContacts.requestPermission()){
-      final contacts = await FlutterContacts.getContacts(withProperties: true);
-      final found = contacts.where((c) => c.displayName.contains(name)).toList();
-      if(found.isNotEmpty && found.first.phones.isNotEmpty){
-        String phone = found.first.phones.first.number;
-        messages.add({"role":"ai","text":"جاري الاتصال بـ $name : $phone"});
-        launchUrl(Uri.parse("tel:$phone"));
-      } else {
-        messages.add({"role":"ai","text":"لم أجد جهة اتصال باسم $name"});
-      }
-    }
-    setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Ibrahim AI"), backgroundColor: Colors.black, foregroundColor: Colors.white),
-      body: Column(children: [
-        Expanded(child: ListView.builder(
-          itemCount: messages.length,
-          itemBuilder: (c,i){
-            final m = messages[i];
-            bool isUser = m["role"]=="user";
-            return Align(
-              alignment: isUser? Alignment.centerRight : Alignment.centerLeft,
-              child: Container(
-                margin: EdgeInsets.all(8),
-                padding: EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: isUser? Colors.blue[100] : Colors.grey[300],
-                  borderRadius: BorderRadius.circular(12)
-                ),
-                child: Text(m["text"]!),
-              ),
-            );
-          }
-        )),
-        if(loading) Padding(padding: EdgeInsets.all(8), child: CircularProgressIndicator()),
-        Row(children: [
-          IconButton(icon: Icon(Icons.camera_alt), onPressed: () async {
-            final img = await ImagePicker().pickImage(source: ImageSource.camera);
-            if(img!=null) askAI("ما هذا في الصورة؟ حللها", image: File(img.path));
-          }),
-          Expanded(child: TextField(controller: _controller, decoration: InputDecoration(hintText: "اسألني او قل اتصل بفلان"))),
-          IconButton(icon: Icon(Icons.send), onPressed: (){
-            if(_controller.text.isNotEmpty){ askAI(_controller.text); _controller.clear(); }
-          })
-        ])
-      ]),
+      appBar: AppBar(title: Text("Ibrahim AI - يعمل للأبد"), backgroundColor: Colors.deepPurple, foregroundColor: Colors.white),
+      body: Column(
+        children: [
+          Expanded(child: ListView.builder(itemCount: _messages.length, itemBuilder: (c, i) {
+            final m = _messages[i];
+            final isUser = m["role"] == "user";
+            return Align(alignment: isUser? Alignment.centerRight : Alignment.centerLeft, child: Container(margin: EdgeInsets.all(8), padding: EdgeInsets.all(12), decoration: BoxDecoration(color: isUser? Colors.deepPurple : Colors.grey[300], borderRadius: BorderRadius.circular(12)), child: Text(m["text"]!, style: TextStyle(color: isUser? Colors.white : Colors.black))));
+          })),
+          if (_loading) CircularProgressIndicator(),
+          Padding(padding: EdgeInsets.all(8), child: Row(children: [Expanded(child: TextField(controller: _controller, decoration: InputDecoration(hintText: "اكتب سؤالك...", border: OutlineInputBorder()))), IconButton(icon: Icon(Icons.send), onPressed: sendMessage)])),
+        ],
+      ),
     );
   }
 }
