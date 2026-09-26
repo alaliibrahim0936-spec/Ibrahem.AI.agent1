@@ -14,7 +14,7 @@ class IbrahimAgent extends StatefulWidget {
 }
 
 class _IbrahimAgentState extends State<IbrahimAgent> {
-  final String apiKey = "ضع_مفتاحك_هنا";
+  final String apiKey = "AQ.Ab8RN6KviYAqbJezszQYuUErIVTJ2NSPJheK183sSiBR6ZSowQ";
   final TextEditingController _controller = TextEditingController();
   List<Map<String,String>> messages = [];
   bool loading = false;
